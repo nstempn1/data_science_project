@@ -1,0 +1,51 @@
+---
+title: "Advandced Data Science Project RMD"
+author: "Nikita Stempniewicz"
+date: "September 8, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Analysis Assignment 
+
+Perform an analysis of "data scientist" jobs listed on job boards and on the employment pages of major companies. What are the most common skills that employers look for? What are the most unique skills that employers look for? Where are the types of companies that employ the most data scientists?
+
+### Potential data sources
+
+  * Job Boards
+    + Indeed
+    + Monster
+    + Glassdoor
+    + LinkedIn
+  * Major Companies? 
+    + Amazon 
+    + Google
+    + Facebook
+    + IBM
+    + Optum
+    + United
+    + Tableau
+    
+### Potential Analyses
+Data will be extracted from websites using web scrapping methods (e.g., rvest). We will extract data for the following information when possible.
+
+  * Most common skills
+	* Unique Skills??
+  * Cities/locations
+  * Companies 
+    + Size
+    + Industry
+    + Perks
+  * Days posted (length of time)
+  * Years work experience
+  * Educational requirements
+  * Position title
+  * Salary
+	
+**Potential Secondary Analysis**	
+
+find a control job title to search and compare results, e.g., an alternate job that data scientist would become had they not chosen to be data scientists? (statisticians?, software developer?)
+
