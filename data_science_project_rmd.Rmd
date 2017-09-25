@@ -13,14 +13,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Perform an analysis of "data scientist" jobs listed on job boards and on the employment pages of major companies. What are the most common skills that employers look for? What are the most unique skills that employers look for? Where are the types of companies that employ the most data scientists?
 
-### Potential data sources
+### Data source
+
+All the data for this analysis was scraoed from Glassdoor.com. 
+
+  * First, I get data, i.e., job  id, employer id, job title, salaries (if available), locations, employer from the search results for data scientist.
+  * Next, using the job id from the search results in the previous step, I build the URL for the individual job posts on glassdoor and get the raw job descriptions which includes text information on qualifications which I will later query to build structured fields.
+  *Finally, using the employer id from the search results, I build the URL for the employer page on glassdoor, and get the raw text from the employer description field, which includes things like, size, industry, year founded.
+
+Other potential data sources to consider if I have time
 
   * Job Boards
     + Indeed
     + Monster
-    + Glassdoor
     + LinkedIn
-  * Major Companies? 
+  * Major Companies websites? 
     + Amazon 
     + Google
     + Facebook
