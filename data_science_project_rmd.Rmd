@@ -9,28 +9,132 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+```{r, include=FALSE}
+
+library(tidytext)
+library(vcd)
+library(xtable)
+library(stringr)
+
+```
+
 ## Data Analysis Assignment 
 
 Perform an analysis of "data scientist" jobs listed on job boards and on the employment pages of major companies. What are the most common skills that employers look for? What are the most unique skills that employers look for? Where are the types of companies that employ the most data scientists?
 
-### Data source
+### Aims
 
-All the data for this analysis was scraoed from Glassdoor.com. 
+  * Describe educational, technical, and professional requirements for data scientist positions
+  * Describe estimated salaries for data scientist
+  * Investigate the relationship between the different requirements and estimated salary
+
+### Data Source
+
+All the data for this analysis was scraped from Glassdoor.com. To minimize the variation in salaries due to geographic differences, the location when searching for data scientist positions was restricted to New York City, which includes the city itself and surrounding areas.
+
+The methods used to scrape data is described below:
 
   * First, I get data, i.e., job  id, employer id, job title, salaries (if available), locations, employer from the search results for data scientist.
   * Next, using the job id from the search results in the previous step, I build the URL for the individual job posts on glassdoor and get the raw job descriptions which includes text information on qualifications which I will later query to build structured fields.
   * Finally, using the employer id from the search results, I build the URL for the employer page on glassdoor, and get the raw text from the employer description field, which includes things like, size, industry, year founded.
 
-Overall, data for 990 job posts was scraped from the glassdoor website under the search term "data scientist" with no filter on location. These represent the job posts on the first 33 pages of results. 
+### Data set
 
-###Job Locations
+  * 990 data scientist positions in the New York City area
+      + No job descriptions (n=1)
+      + No estimated salary (n=242)
+  * 747 data scientist positions in the New York City area with a job description and estimated salary
 
-One of the fields scraped from the Glassdoor website was the job location, this information was missing for 33 of the 990 job posts. The bar plot belowe looks at the count of Job posts by state. The states with th most job posts include California, New York, followed by Virginia and Massachusetts. 
+###Estimated Salaries
 
-```{r}
-knitr::include_graphics('location_state_barplot.jpg')
+```{r, echo=FALSE}
+data<-readRDS("glassdoor_df_cleaned")
+data<-data[data$job_desc_raw!="NO DESCRIPTION LISTED",]
+data<-data[(is.na(data$salary_average)==FALSE),]
+
+hist(data$salary_average, breaks=seq(0, 400, 25), xlab="Glassdoor Estimated Salary (in thousands)", main="Distribution of Estimated Salary for \nData Scientist Positions in the New York City Area")
+
+mean<-round(mean(data$salary_average),1)
+sd<-round(sd(data$salary_average),1)
 
 ```
+
+The average estimated salary for data scientist in the new york city area was `r mean` and the standard deviation `r sd`
+
+### Education
+
+It is not uncommon for employers to have required and preffered qualifications which often include multiple possibilities for educational requirements, e.g., requiring a bachelors at a minumum, but specyfying a preference for candidates with a masters or PhD. When more than 1 educational requirements are mentioned we classify jobs to the highest level, e.g., posts that included BS and MS are considered MS.
+
+```{r echo=FALSE}
+
+#myvars <- c("phd", "masters", "bs")
+#educ_data <- data[myvars]
+
+data$phd2<- ifelse(data$phd == FALSE, "", "PhD")
+data$ms2<- ifelse(data$masters == FALSE, "", "MS")
+data$bs2<- ifelse(data$bs == FALSE, "", "BS")
+
+data$educ_cat<-str_trim(paste(data$bs2, data$ms2, data$phd2, sep=" "))
+
+#add bs and phd to bs ms and phd
+data$educ_cat<-ifelse(data$educ_cat == "BS  PhD", "PhD" , data$educ_cat)
+
+#add ms and phd to phd
+data$educ_cat<-ifelse(data$educ_cat == "MS PhD", "PhD" , data$educ_cat)
+
+#add bs ms phd to phd
+data$educ_cat<-ifelse(data$educ_cat == "BS MS PhD", "PhD" , data$educ_cat)
+
+#add bs and ms to ms
+data$educ_cat<-ifelse(data$educ_cat == "BS MS", "MS" , data$educ_cat)
+
+no_educ<-round((100*mean(data$educ_cat=="")),1)
+all_educ<-round((100*mean(data$educ_cat=="BS MS PhD")),1)
+phd<-round(100*mean(data$educ_cat=="PhD"),1)
+masters<-round(100*mean(data$educ_cat=="MS"),1)
+bs<-round(100*mean(data$educ_cat=="BS"),1)
+
+educ_sum<-c(phd, masters, bs, all_educ, no_educ)
+label<-c("phd", "masters", "bs", "all_educ", "no_educ")
+
+education<-data.frame(educ_sum, label)
+
+
+#barplot(education$educ_sum, main="Data Scientist Positions by Education", 
+#        ylab="Education", xlab="Proportion of Job Posts", horiz=TRUE, names.arg=c("PhD", "MS", "BS"))
+
+##Create box plot 
+data$educ_cat2<-ifelse(data$educ_cat == "", "1. No Education" , data$educ_cat)
+data$educ_cat2<-ifelse(data$educ_cat == "BS", "2. BS" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "MS", "3. MS" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "PhD", "4. PHD" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "BS MS PhD", "5. BS MS PhD" , data$educ_cat2)
+
+
+table(data$educ_cat2)
+
+boxplot(salary_average~educ_cat2,data=data, main="Differences in Estimated Salaries by Education", 
+  	xlab="Estimated Salary", ylab="Estimated Salary (in thousands)")
+
+```
+
+
+Overall, we were not able to get educational requrements for `r no_educ`% of job posts. Among job descriptions where education was specified, `r bs`%, `r masters`%, `r phd`%, mentioned a bachelors, masters, and PhD degrees respectively.
+
+Using the raw text from the job and employer decsipription I created binary variables looking for textUsing similar methods that were used to create the binary variables for the skills, we looked at the raw job descriptions for text describing education requirements for the job. Overall, 88.5% of job posts had some information specifying the level of edication required for the position. 54.2% of posts specified multiple levels of education, i.e., bachelors, masters, or PhD.
+
+To better understand the relationship between education and estimated salary we used a simple linear regression model. For this part of the analysis, we used jobs with a BS as the reference group, and excluded jobs with no information on education. The results are provided below.
+
+```{r, echo=FALSE}
+educ_cleaned<-data[data$educ_cat2!="1. No Education",]
+
+model2<-lm(educ_cleaned$salary_average~ educ_cleaned$educ_cat2)
+
+summary(model2)
+
+```
+On average, compared to jobs where bachelors degree is the only educational requirement mentioned, jobs that mentioned masters degrees had an estimated salary 14.7 thousand higher, jobs that mentioned a PhD had an estimated salary 27.7 thousand higher. The average salary for job posts that only mentioned a bachelors degree was $165,000. 
 
 
 ### Job Skills
@@ -40,7 +144,74 @@ Using the raw text from the job and employer decsipription I created binary vari
 Overall, the most common skills are Python, SQL, and R. Some less common skills include Oracle, Ruby , and Stata.
 
 ```{r}
-knitr::include_graphics('skills_barplot.jpg')
+
+SAS <-round((100*mean(data$sas==1)),1)
+oracle <-round((100*mean(data$oracle==1)),1)
+ruby <-round((100*mean(data$ruby==1)),1)
+hadoop <-round((100*mean(data$hadoop==1)),1)
+NLP <-round((100*mean(data$NLP==1)),1)
+matlab <-round((100*mean(data$matlab==1)),1)
+linux <-round((100*mean(data$linux==1)),1)
+java <-round((100*mean(data$java==1)),1)
+spss <-round((100*mean(data$spss==1)),1)
+java <-round((100*mean(data$java==1)),1)
+tableau <-round((100*mean(data$tableau==1)),1)
+excel <-round((100*mean(data$excel==1)),1)
+SQL <-round((100*mean(data$SQL==1)),1)
+stata <-round((100*mean(data$stata==1)),1)
+C <-round((100*mean(data$C==1)),1)
+SAS <-round((100*mean(data$SAS==1)),1)
+R <-round((100*mean(data$R==1)),1)
+python <-round((100*mean(data$python==1)),1)
+ml <-round((100*mean(data$ml==1)),1)
+opt <-round((100*mean(data$opt==1)),1)
+bd <-round((100*mean(data$bd==1)),1)
+research <-round((100*mean(data$research==1)),1)
+stats <-round((100*mean(data$stats==1)),1)
+dm <-round((100*mean(data$dm==1)),1)
+risk <-round((100*mean(data$risk==1)),1)
+fs <-round((100*mean(data$fs==1)),1)
+program <-round((100*mean(data$program==1)),1)
+pharma <-round((100*mean(data$pharma==1)),1)
+sd <-round((100*mean(data$sd==1)),1)
+UX <-round((100*mean(data$UX==1)),1)
+
+SAS 
+oracle 
+ruby 
+hadoop
+NLP 
+matlab 
+linux 
+java 
+spss 
+java 
+tableau 
+excel 
+SQL 
+stata 
+C 
+SAS
+R 
+python 
+ml 
+opt 
+bd 
+research 
+stats 
+dm 
+risk
+fs 
+program
+pharma 
+sd 
+UX 
+
+data$skills2<- data$sas+data$oracle+data$ruby+data$hadoop+data$NLP+data$matlab+data$linux+
+data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ 
+data$python+data$ml+data$opt+data$bd+data$research+data$stats+data$dm+data$risk+data$fs+data$program+data$pharma+data$sd++data$UX
+
+
 
 ```
 

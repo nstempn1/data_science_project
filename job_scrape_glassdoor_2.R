@@ -19,8 +19,8 @@ library(stringr)
 ##  note for some reason glassdoor does not let you go past job post page 33?
 ###################################################################################################
 
-url <- paste0("https://www.glassdoor.com/Job/data-scientist-jobs-SRCH_KO0,14_IP",1,".htm")
-urls <- paste0("https://www.glassdoor.com/Job/data-scientist-jobs-SRCH_KO0,14_IP", 1:33, ".htm")
+url <- paste0("https://www.glassdoor.com/Job/new-york-data-scientist-jobs-SRCH_IL.0,8_IC1132348_KO9,23_IP",1,".htm")
+urls <- paste0("https://www.glassdoor.com/Job/new-york-data-scientist-jobs-SRCH_IL.0,8_IC1132348_KO9,23_IP", 1:33, ".htm")
 
 df1<-data.frame()
 
@@ -144,7 +144,7 @@ save(df1, file="glassdoor_df1.r")
            )
   }
   
-  saveRDS(glassdoor_df, file="glassdoor_df1")
+  saveRDS(df1, file="glassdoor_df1")
 
 ####################################################################################################
 ####################################################################################################
@@ -198,7 +198,7 @@ save(df1, file="glassdoor_df1.r")
     
   }
   
-  saveRDS(glassdoor_df, file="glassdoor_df2")
+  saveRDS(df2, file="glassdoor_df2")
   
   
 ####################################################################################################

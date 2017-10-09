@@ -6,10 +6,20 @@
 ##################################################################################################################
 
 library(tidytext)
+library(vcd)
+library(xtable)
+
 
 data<-readRDS("glassdoor_df")
 
 n<-nrow(data)
+
+##################################################################################################################
+##################################################################################################################
+# Create structured fields from raw job descriptions
+##################################################################################################################
+##################################################################################################################
+
 
 bad_txt<-c("â", "-", ",", "/")
 data$job_desc1<-gsub(paste(bad_txt, collapse="|"), " ", data$job_desc_raw)
@@ -22,12 +32,28 @@ data$job_desc3<-gsub("[)]", " ", data$job_desc3)
 bachelor<-c("\\bbachelor\\b", "\\bbachelors\\b", "\\bundergraduate\\b", "\\bbs\\b", "\\bb.s.\\b", "\\bb.s\\b")
 master<-c("\\bmaster\\b", "\\bmasters\\b", "graduate degree", "ms degree", "ms in", "m.s. in", "m.s in"  )
 phd<-c("phd", "doctorate", "\\bph\\b")
+mba<-c("m.b.a", "\\mba\\b")
+stats<-c("statistics", "statistical", "regression", "modelling")
+
+
 
 
 for (i in 1:n)
 {
   
 data$python[i] <- any(grepl("\\bpython\\b", data$job_desc3[i], ignore.case=TRUE))
+data$ml[i] <- any(grepl("machine learning", data$job_desc3[i], ignore.case=TRUE))
+data$opt[i] <- any(grepl("optimization", data$job_desc3[i], ignore.case=TRUE))
+data$stats[i] <- any(grepl("statistic", data$job_desc3[i], ignore.case=TRUE))
+data$risk[i] <- any(grepl("risk", data$job_desc3[i], ignore.case=TRUE))
+data$UX[i] <- any(grepl("UX", data$job_desc3[i], ignore.case=FALSE))
+data$bd[i] <- any(grepl("big data", data$job_desc3[i], ignore.case=TRUE))
+data$dm[i] <- any(grepl("data management", data$job_desc3[i], ignore.case=TRUE))
+data$pharma[i] <- any(grepl("pharmaceutical", data$job_desc3[i], ignore.case=TRUE))
+data$fs[i] <- any(grepl("financial services", data$job_desc3[i], ignore.case=TRUE))
+data$sd[i] <- any(grepl("software development", data$job_desc3[i], ignore.case=TRUE))
+data$program[i] <- any(grepl("programming", data$job_desc3[i], ignore.case=TRUE))
+data$research[i] <- any(grepl("research", data$job_desc3[i], ignore.case=TRUE))
 data$R[i] <- any(grepl("\\bR\\b", data$job_desc3[i], ignore.case=TRUE))
 data$SAS[i] <- any(grepl("\\bSAS\\b", data$job_desc3[i], ignore.case=TRUE))
 data$C[i] <- any(grepl("\\bC+\\b", data$job_desc3[i], ignore.case=TRUE))
@@ -48,72 +74,46 @@ data$bs[i] <- any(grepl(paste(bachelor, collapse="|"), data$job_desc3[i], ignore
 data$bs2[i] <- any(grepl("bachelor", data$job_desc3[i], ignore.case=TRUE))
 data$masters[i] <- any(grepl(paste(master, collapse="|"), data$job_desc3[i], ignore.case=TRUE))
 data$phd[i] <- any(grepl(paste(phd, collapse="|"), data$job_desc3[i], ignore.case=TRUE))
+data$mba[i] <- any(grepl(paste(mba, collapse="|"), data$job_desc3[i], ignore.case=TRUE))
+data$stats[i] <- any(grepl(paste(stats, collapse="|"), data$job_desc3[i], ignore.case=TRUE))
 data$degree[i] <- any(grepl("\\bdegree\\b", data$job_desc3[i], ignore.case=TRUE))
 
 }
 
-data$skills<- data$degree+data$phd+data$masters+data$phd+data$bs2+data$bs+data$sas+data$oracle+data$ruby+data$hadoop+data$NLP+data$matlab+data$linux+
-  data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ data$python
+#data$skills<- data$degree+data$phd+data$masters+data$phd+data$bs2+data$bs+data$sas+data$oracle+data$ruby+data$hadoop+data$NLP+data$matlab+data$linux+
+#  data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ data$python
 
 data$skills2<- data$sas+data$oracle+data$ruby+data$hadoop+data$NLP+data$matlab+data$linux+
-  data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ data$python
+  data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ 
+  data$python+data$ml+data$opt+data$bd+data$research+data$stats+data$dm+data$risk+data$fs+data$program+data$pharma+data$sd++data$UX
 
 data$education<- data$masters+data$phd+data$bs
 
 
-table(data$skills2)
-table(data$education)
+#table(data$skills2)
+#table(data$education)
 
-saveRDS(data, file="glassdoor_df_cleaned")
-
-#hadoop java linux SOSS MATLAB NLP
-summary(data$hadoop)
-summary(data$NLP)
-summary(data$matlab)
-summary(data$linux)
-summary(data$java)
-summary(data$spss)
-summary(data$ruby)
-summary(data$oracle)
-summary(data$sas)
-
-#include vars for keywords like research etc.
-
-#geo_code
-#package ggmap
-
-#vector city and sate
-#output latitude and longitude
-
-#Jitter Points
-
-data$job_desc_raw
-  unnest_tokens(word, word, )
-
-strsplit(data$job_desc1[4], " ")
-
-#Oracle
-data$job_id[data$hadoop==0 & data$NLP==0 & data$java==0& data$R==0 & data$python==0]
-
-data$job_id[data$skills==0]
+#saveRDS(data, file="glassdoor_df_cleaned")
 
 
-data$job_id[data$hadoop==0 & data$NLP==0 & data$java==0& data$R==0 & data$python==0& data$excel==0 & data$sas==0]
+#data$job_id[data$skills2==0]
+#strsplit(data$job_desc3[data$job_id=="2426165858"]," ")
+
+##################################################################################################################
+##################################################################################################################
+# Create structured fields from raw employer descriptions
+##################################################################################################################
+##################################################################################################################
+
 
 data$emp_desc1<-gsub(paste(bad_txt, collapse="|"), " ", data$emp_desc_raw)
 data$emp_desc2<-gsub("([[:lower:]])([[:upper:]])", "\\1 \\2", data$emp_desc1)
 data$emp_desc2<-gsub("([[:lower:]])([[:digit:]])", "\\1 \\2", data$emp_desc2)
 data$emp_desc2<-gsub("([[:digit:]])([[:upper:]])", "\\1 \\2", data$emp_desc2)
 
-data$job_desc2<-gsub("([[:digit:]][[:upper:]][[:upper:]])([[:upper:]][[:lower:]])", "\\1 \\2", data$job_desc2)
-data$job_desc3<-gsub("[(]", " ", data$job_desc2)
-data$job_desc3<-gsub("[)]", " ", data$job_desc3)
+ sub(".*years experience *(.*?)", "\\1", data$job_desc3[1], ignore.case=TRUE)
 
-strsplit(data$job_desc3[data$job_id=="2540303291"]," ")
-
-strsplit(data$emp_desc2[data$job_id=="2525091352"]," ")
-
- 2524534214 2540303291 2534082425 2519063493 2499480680 2541928381 2519295846 2456021237 2517953951 2495806023 2542468889 2540820285
+ data$job_desc3[1]
 
 for (i in 1:n)
 {
@@ -124,14 +124,7 @@ for (i in 1:n)
   
   
 }
-tabulate(data$industry)
-summary(data$salaries)
 
-summary(data$founded)
-data$job_id[data$founded==0]
-
-
-job_desc_words<-strsplit(data$job_desc3," ")
 
 
 for (i in 1:n)
@@ -142,7 +135,7 @@ for (i in 1:n)
   
 }
 
-strsplit(data$job_desc3[data$job_id=="2525091352"]," ")
+#strsplit(data$job_desc3[data$job_id=="2525091352"]," ")
 
 data$salary_low[data$salary_low=="Not listed"]<-""
 data$salary_high[data$salary_high=="Not listed"]<-""
@@ -150,10 +143,66 @@ data$salary_high[data$salary_high=="Not listed"]<-""
 
 data$salary_average<-as.numeric(data$salary_low)+as.numeric(data$salary_high)
 
-hist(data$salary_average)
+hist(data$salary_average, breaks=seq(0, 400, 25))
 
-gsub(".*Industry\\s*|first*", "", data$emp_desc2[2525091352], ignore.case=TRUE)
-sub(".*[$] *(.*?) *k[-].*", "\\1", data$salaries[100])
-sub(".*[$] *(.*?) *k[()].*", "\\1", data$salaries[100])
 
-summary(lm(data$salary_average~data$SQL+data$python+data$phd+data$masters))
+#summary(lm(data$salary_average~data$phd+data$masters+data$mba+data$bs))
+
+#model1<-(lm(data$salary_average~ data$sas+data$oracle+data$ruby+data$hadoop+data$NLP+data$matlab+data$linux+
+#  data$java+ data$spss +data$spss +data$tableau+ data$excel+data$SQL+data$stata + data$C + data$SAS +data$R+ 
+#  data$python+data$ml+data$opt+data$bd+data$research+data$stats+data$dm+data$risk+data$fs+data$program+data$pharma+data$sd++data$UX))
+
+
+#hist(data$salary_average, breaks=seq(0, 400, 25), xlab="Glassdoor Estimated Salary", main="Distribution of Estimated Salary for \nData Scientist Positions in the New York City Area")
+
+#summary(data$salary_average)
+
+saveRDS(data, file="glassdoor_df_cleaned")
+
+data<-readRDS("glassdoor_df_cleaned")
+data<-data[data$job_desc_raw!="NO DESCRIPTION LISTED",]
+data<-data[(is.na(data$salary_average)==FALSE),]
+
+table(data$education)
+
+myvars <- c("phd", "masters", "bs")
+educ_data <- data[myvars]
+
+data$phd2<- ifelse(educ_data$phd == FALSE, "", "PhD")
+data$ms2<- ifelse(educ_data$masters == FALSE, "", "MS")
+data$bs2<- ifelse(educ_data$bs == FALSE, "", "BS")
+
+data$educ_cat<-str_trim(paste(data$bs2, data$ms2, data$phd2, sep=" "))
+
+#add bs and phd to bs ms and phd
+data$educ_cat<-ifelse(data$educ_cat == "BS  PhD", "BS MS PhD" , data$educ_cat)
+
+#add ms and phd to phd
+data$educ_cat<-ifelse(data$educ_cat == "MS PhD", "PhD" , data$educ_cat)
+educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "MS PhD", "PhD" , educ_cleaned$educ_cat)
+
+#add bs and ms to ms
+data$educ_cat<-ifelse(data$educ_cat == "BS MS", "MS" , data$educ_cat)
+educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "BS MS", "MS" , educ_cleaned$educ_cat)
+
+
+plot(data$educ_cat)
+table(data$educ_cat)
+
+BS MS
+table(educ_cleaned$educ_cat)
+
+educ_cleaned<-data[data$education!=0,]
+
+model1<-lm(educ_cleaned$salary_average~ educ_cleaned$phd+educ_cleaned$ms)
+model2<-lm(educ_cleaned$salary_average~ educ_cleaned$educ_cat)
+
+summary(model1)
+summary(model2)
+
+
+?mosaic
+
+strsplit(data$job_desc3[data$job_id=="2517635105"]," ")
+
+
