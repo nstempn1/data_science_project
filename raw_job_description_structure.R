@@ -159,50 +159,28 @@ hist(data$salary_average, breaks=seq(0, 400, 25))
 
 saveRDS(data, file="glassdoor_df_cleaned")
 
-data<-readRDS("glassdoor_df_cleaned")
-data<-data[data$job_desc_raw!="NO DESCRIPTION LISTED",]
-data<-data[(is.na(data$salary_average)==FALSE),]
+#data<-readRDS("glassdoor_df_cleaned")
+#data<-data[data$job_desc_raw!="NO DESCRIPTION LISTED",]
+#data<-data[(is.na(data$salary_average)==FALSE),]
 
-table(data$education)
+#table(data$education)
 
-myvars <- c("phd", "masters", "bs")
-educ_data <- data[myvars]
+#myvars <- c("phd", "masters", "bs")
+#educ_data <- data[myvars]
 
-data$phd2<- ifelse(educ_data$phd == FALSE, "", "PhD")
-data$ms2<- ifelse(educ_data$masters == FALSE, "", "MS")
-data$bs2<- ifelse(educ_data$bs == FALSE, "", "BS")
+#data$phd2<- ifelse(educ_data$phd == FALSE, "", "PhD")
+#data$ms2<- ifelse(educ_data$masters == FALSE, "", "MS")
+#data$bs2<- ifelse(educ_data$bs == FALSE, "", "BS")
 
-data$educ_cat<-str_trim(paste(data$bs2, data$ms2, data$phd2, sep=" "))
+#data$educ_cat<-str_trim(paste(data$bs2, data$ms2, data$phd2, sep=" "))
 
 #add bs and phd to bs ms and phd
-data$educ_cat<-ifelse(data$educ_cat == "BS  PhD", "BS MS PhD" , data$educ_cat)
+#data$educ_cat<-ifelse(data$educ_cat == "BS  PhD", "BS MS PhD" , data$educ_cat)
 
 #add ms and phd to phd
-data$educ_cat<-ifelse(data$educ_cat == "MS PhD", "PhD" , data$educ_cat)
-educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "MS PhD", "PhD" , educ_cleaned$educ_cat)
+#data$educ_cat<-ifelse(data$educ_cat == "MS PhD", "PhD" , data$educ_cat)
+#educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "MS PhD", "PhD" , educ_cleaned$educ_cat)
 
 #add bs and ms to ms
-data$educ_cat<-ifelse(data$educ_cat == "BS MS", "MS" , data$educ_cat)
-educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "BS MS", "MS" , educ_cleaned$educ_cat)
-
-
-plot(data$educ_cat)
-table(data$educ_cat)
-
-BS MS
-table(educ_cleaned$educ_cat)
-
-educ_cleaned<-data[data$education!=0,]
-
-model1<-lm(educ_cleaned$salary_average~ educ_cleaned$phd+educ_cleaned$ms)
-model2<-lm(educ_cleaned$salary_average~ educ_cleaned$educ_cat)
-
-summary(model1)
-summary(model2)
-
-
-?mosaic
-
-strsplit(data$job_desc3[data$job_id=="2517635105"]," ")
-
-
+#data$educ_cat<-ifelse(data$educ_cat == "BS MS", "MS" , data$educ_cat)
+#educ_cleaned$educ_cat<-ifelse(educ_cleaned$educ_cat == "BS MS", "MS" , educ_cleaned$educ_cat)
