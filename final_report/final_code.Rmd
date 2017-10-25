@@ -1,0 +1,403 @@
+---
+title: "Data Scientist Job Postings in New York City: Educational and Technical/Analytical Skills, and How they Relate to Estimated Salaries"
+author: "Nikita Stempniewicz"
+date: "October 24, 2017"
+output: pdf_document
+bibliography: test.bib
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+
+```{r, echo=FALSE, warning=FALSE}
+packages<-c("rvest", "stringr","tidytext","vcd", "xtable", "ggplot2", "crayon", "huxtable", "magrittr", "bibtex")
+
+for (i in packages){
+  if(!require(i,character.only = T,quietly=T,warn.conflicts = F)){
+    install.packages(i, repos = "http://cran.us.r-project.org")
+  }
+  require(i,character.only = T,quietly=T,warn.conflicts = F)
+}
+
+library(rvest)
+library(tidytext)
+library(vcd)
+library(xtable)
+library(ggplot2)
+library(crayon)
+library(huxtable)
+library(stringr)
+library(magrittr)
+library(bibtex)
+```
+
+
+## Introduction
+
+In general, a data scientists' primary function is extracting insights from data, and communicating those insights in a clear and efficient manner. This requires a diverse skill set based in math, statistics, and computer, and information sciences.[@Wiki] There is no typical technical or educational skill set required of data scientist, and different employers value different backgrounds. Some companies only require a bachelor's degree while others require a PhD for their data scientist. Most require programming and statistics skills, but often differ in the programming language or statistical software, e.g., SQL, R, STATA, Python, etc. Some data scientist positions are more focused on data visualization and communication, with an emphasis on software such as tableau, and others on exploratory analysis and more of an emphasis on statistical methods such as machine learning.[@Forbes, @adtmag, @datamania. @IBM]
+
+IBM and Burning Glass Technologies recently released a report, The Quant Crunch: How the Demand for Data Science Skills is Disrupting the Job Market, where it projected the demand for data and analytic talent to increase broadly by 364,000 openings, to 2,720,000 by 2020, with the fastest growth among data scientists and advanced analysts (27% increase by 2020). The same report found the average salary of data scientist to be $94,576, and in general, salaries for all data and analytic talent changes significantly depending on the educational and analytical skills desired of the position. Finally, the same report listed the top four metro areas in the United States for data scientist and advanced analytics job postings as New York City (NYC), San Francisco, Washington D.C., and Boston, respectively. [@IBM] 
+
+Current job listings for data scientist positions can be found on online job boards, e.g., glassdoor, and queried by location. These often include information on desired education and technical/analytic skills, in addition to an estimated salary. Glassdoor calculates estimated salary using machine learning algorithms based on data from millions of employees, and focuses on key factors such as job title, employer, and job location. [@GlassDoorEst]
+
+By web scraping job postings for data scientist in NYC from Glassdoor, we were able to obtain over 700 job descriptions and estimated salaries. Using this data, we described estimated salaries, desired education, and technical/analytical skills for data scientist positions in the NYC metro area. Beyond our descriptive analyses we looked at the relationship of desired education and technical/analytical skills with estimated salary. 
+
+We found in New York City, there was no typical education or technical/analytical background desired of data scientists, and differences in salaries were associated with those different background. 
+
+## Data Source & Methods
+
+To minimize the variation in salaries due to geographic differences, the location when searching for data scientist positions was restricted to New York City, which includes the city itself and surrounding metro areas, and was ranked highest for data scientist and advanced analytics job postings in the Quant Crunch report. We acknowledge a limitation of the study is that the results from this analysis are most relevant and generalizable to data scientist positions in NYC and other similar cities, and feel the strength of removing any geographic differences in salary justified our decision. 
+
+###Scraping Glassdoor
+All the data for this analysis was scraped from Glassdoor.com in R, on October 8th 2017, using the rvest [@rvest] package, and selectorgadget to identify relevant html nodes. Glassdoor includes 33 pages of results for a given search with 30 job listings per page, which totals to 990 job listings per search. 
+
+To get our data, first we built the URLs with a loop for the 33 different summary pages. Next, we scraped all the html data from the websites and extracted relevant data for the 30 posts on each summary page using the appropriate html nodes found using selectorgadget. For each post we extracted (when available) job id, job title, salary, and job location, from the html code from each summary pages. Next, using the job id from the search results in the previous step, and another loop, we built the URLs for the individual job posts on glassdoor. With the URL and similar web scraping methods previously described, we extracted the raw text job descriptions from the 990 websites for the individual job postings. (see supplemental code section 1)
+The code from this section in the supplemental was based on code originally written by Stephen Cristiano and he authors are grateful for the contributions.
+
+###Cleaning Text Data
+
+Finally, using text mining and analysis packages in R, i.e., Stringr [@stringr], and tidytext [@tidytext], we used regular expressions to create structured fields for different educational (Bachelors, Masters, and Doctorate), and technical (Statistics,  Research, Machine Learning,  Big Data, Optimization, Data Management, Software Development,  Natural Language Processing) and analytical skills (Python, SQL, R, Hadoop, Java, C, SAS, Excel, Tableau, Matlab,  Linux, SPSS, Oracle, Ruby, STATA) from the raw job descriptions. The patterns used to identify and define the different skills can be found in supplemental code section 2.
+
+###Statitical Methods
+
+Using simple statistical methods, e.g., t-tests, analysis of variance, and linear regression, we described differences in estimated salaries, desired education, and technical/analytical skills among data scientist positions in NYC, and how these attributes relate to one another.
+
+
+
+```{r, echo=FALSE}
+data<-readRDS("glassdoor_df_cleaned")
+data<-data[data$job_desc_raw!="NO DESCRIPTION LISTED",]
+data<-data[(is.na(data$salary_average)==FALSE),]
+
+mean<-round(mean(data$salary_average),1)
+sd<-round(sd(data$salary_average),1)
+
+```
+
+
+
+##Results
+
+From the 990 data scientist positions in the New York City area from the original search on glassdoor, 242 were excluded from the analyses because there was no estimated salary provided, and 1 was excluded for no job description. For this analysis we used the 747 data scientist positions in the New York City area with a job description and estimated salary.
+
+Figure 1 shows the  distribution of estimated salary for the 747 data scientist positions in the New York City area. Overall, the average estimated salary for data scientist in the New York City area was `r mean` thousand dollars and the standard deviation `r sd`, with the overall distribution slightly skewed to the right. 
+
+```{r fig1,fig.width=6,fig.height=5,echo=FALSE,message=FALSE,include=TRUE,fig.cap="Distribution of estimated salaries for 747 data scientist positions, slightly skewed to the right", fig.pos = 'H'}
+
+hist(data$salary_average, breaks=seq(0, 400, 25), xlab="Glassdoor Estimated Salary (in thousands)", main="Figure 1: Distribution of Estimated Salary for \nData Scientist Positions in the New York City Area")
+
+```
+
+### Education
+
+It is not uncommon for employers to have required and preferred qualifications which often include multiple possibilities for educational requirements, e.g., requiring a bachelors at a minimum, but specifying a preference for candidates with a masters or PhD. When more than one educational requirement is mentioned we classify education at the highest level, e.g., posts that included BS and MS are considered MS.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(crayon)
+library(huxtable)
+library(tidytext)
+library(vcd)
+library(xtable)
+library(stringr)
+library(magrittr)
+
+#myvars <- c("phd", "masters", "bs")
+#educ_data <- data[myvars]
+
+data$phd2<- ifelse(data$phd == FALSE, "", "PhD")
+data$ms2<- ifelse(data$masters == FALSE, "", "MS")
+data$bs2<- ifelse(data$bs == FALSE, "", "BS")
+
+data$educ_cat<-str_trim(paste(data$bs2, data$ms2, data$phd2, sep=" "))
+
+#add bs and phd to bs ms and phd
+data$educ_cat<-ifelse(data$educ_cat == "BS  PhD", "PhD" , data$educ_cat)
+
+#add ms and phd to phd
+data$educ_cat<-ifelse(data$educ_cat == "MS PhD", "PhD" , data$educ_cat)
+
+#add bs ms phd to phd
+data$educ_cat<-ifelse(data$educ_cat == "BS MS PhD", "PhD" , data$educ_cat)
+
+#add bs and ms to ms
+data$educ_cat<-ifelse(data$educ_cat == "BS MS", "MS" , data$educ_cat)
+
+no_educ<-round((100*mean(data$educ_cat=="")),1)
+all_educ<-round((100*mean(data$educ_cat=="BS MS PhD")),1)
+phd<-round(100*mean(data$educ_cat=="PhD"),1)
+masters<-round(100*mean(data$educ_cat=="MS"),1)
+bs<-round(100*mean(data$educ_cat=="BS"),1)
+
+educ_sum<-c(phd, masters, bs, all_educ, no_educ)
+label<-c("phd", "masters", "bs", "all_educ", "no_educ")
+
+education<-data.frame(educ_sum, label)
+
+
+#barplot(education$educ_sum, main="Data Scientist Positions by Education", 
+#        ylab="Education", xlab="Proportion of Job Posts", horiz=TRUE, names.arg=c("PhD", "MS", "BS"))
+
+##Create box plot 
+data$educ_cat2<-ifelse(data$educ_cat == "", "1. No Education" , data$educ_cat)
+data$educ_cat2<-ifelse(data$educ_cat == "BS", "2. BS" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "MS", "3. MS" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "PhD", "4. PHD" , data$educ_cat2)
+data$educ_cat2<-ifelse(data$educ_cat == "BS MS PhD", "5. BS MS PhD" , data$educ_cat2)
+
+avg1<-round(mean(data$salary_average[data$educ_cat2=="1. No Education"]),1)
+sd1<-round(sd(data$salary_average[data$educ_cat2=="1. No Education"]),1)
+avg2<-round(mean(data$salary_average[data$educ_cat2=="2. BS"]),1)
+sd2<-round(sd(data$salary_average[data$educ_cat2=="2. BS"]),1)
+avg3<-round(mean(data$salary_average[data$educ_cat2=="3. MS"]),1)
+sd3<-round(sd(data$salary_average[data$educ_cat2=="3. MS"]),1)
+avg4<-round(mean(data$salary_average[data$educ_cat2=="4. PHD"]),1)
+sd4<-round(sd(data$salary_average[data$educ_cat2=="4. PHD"]),1)
+
+
+ht <- hux(
+        Degree = c('No Education', 'Bachelors (BS)', 'Masters (MS)', 'PhD'),
+        Jobs = c(" 99  (13.3%)", "175 (23.4%)", "255 (34.1%)", "218 (29.1%)"),
+        Salaries = c(paste0(avg1, " (", sd1, ")"), paste0(avg2, " (", sd2, ")"), paste0(avg3, " (", sd3, ")"), paste0(avg4, " (", sd4, ")")),
+        add_colnames = TRUE
+      )%>%
+
+      set_bold(1, everywhere, TRUE)       %>%
+      set_bottom_border(1, everywhere, 1) %>%
+      set_align(everywhere, 2, 'center')   %>%
+      set_right_padding(10)               %>%
+      set_left_padding(10)                %>%
+      set_width(0.5)                 %>%
+      set_caption('Education Requirements (Degree) and Estimated Salaries (in thousand), Average (SD)')
+
+ht
+
+
+```
+
+
+Overall, we were not able to get education  for `r no_educ`% of job posts, and `r bs`%, `r masters`%, `r phd`%, were classified as bachelors, masters, and PhD degrees respectively. Data science positions that desired a PhD education had an average salary of $192,800, compared to $179,900 for masters, and $165,200 when only a bachelors degree was mentioned. For jobs where no information on education was ascertained, the average salary was similar to the overall average. Figure 2 shows the differences in the medians, 25th and 75th percentiles for the different categories of education.
+
+
+
+```{r, include=FALSE}
+
+#Analysis of variance comparing the 3 different levels of educations, i.e., BS, MS, and PhD
+
+data$educ_cat3<-ifelse(data$educ_cat == "", NA , data$educ_cat)
+
+aov<-aov(data$salary_average~ data$educ_cat3)
+
+summary(aov)
+
+#Analysis of variance comparing the 3 different levels of educations, i.e., BS, MS, and PhD
+
+data$educ_isna<-ifelse(data$educ_cat == "", 1 , 0)
+
+t.test(data$salary_average~ data$educ_isna)
+
+#linear model
+
+model2<-lm(data$salary_average~ data$educ_cat3)
+
+summary(model2)
+
+```
+We used a t-test to compare the salaries for the 648 positions where education was ascertained from the job description to the 99 positions where no such information was found, and found no difference in the average salaries between the two groups (p-value=0.69). We used Analysis of Variance (ANOVA) methods to compare the average salaries between education categories, i.e., Bachelors vs. Masters vs. P.h.D, which provided enough evidence to suggest the differences in salaries are statistically significant between at least 2 of the 3 groups (p-value <.001).  Statistically significant differences were confirmed and quantified using linear regression, where compared to jobs where bachelors degree is the only educational requirement mentioned, jobs that mentioned masters degrees had an estimated salary 14.7 (SE: 2.7) thousand higher, and jobs that mentioned a PhD had an estimated salary 27.7 (SE: 4.9) thousand higher, both coefficients with p-values < .01.
+
+
+```{r fig2,echo=FALSE,message=FALSE,include=TRUE,fig.cap="Distribution of estimated salaries by Education, incduing the median (thick black line), 25th percentile (bottom of box), and 75th percentile (top of box) of estimated salary. Overall, the median, 25th, and 75th percentiles of estimated salary increase with education degrees", fig.height= 5}
+
+boxplot(salary_average~educ_cat2,data=data, main="Figure 2: Differences in Estimated Salaries by Education", 
+  	xlab="Estimated Salary", ylab="Estimated Salary (in thousands)")
+
+```
+
+
+### Job Skills
+
+Overall, 97.6% of the 747 data scientist job postings had at least 1 of the 15 skills that were investigated. Figure 3 shows overall, the most common skills are statistics (63.3%), python (57.2%), SQL (56.4%), research (52.6%), machine learning (44.4%), and R (43.8%). Some less common skills include natural language processing (NLP, 5.9%), Ruby (3.2%), UX (2.1%), and STATA (1.3%). (figure 3)
+
+```{r, echo=FALSE}
+
+SAS <-round((100*mean(data$sas==1)),1)
+oracle <-round((100*mean(data$oracle==1)),1)
+ruby <-round((100*mean(data$ruby==1)),1)
+hadoop <-round((100*mean(data$hadoop==1)),1)
+NLP <-round((100*mean(data$NLP==1)),1)
+matlab <-round((100*mean(data$matlab==1)),1)
+linux <-round((100*mean(data$linux==1)),1)
+java <-round((100*mean(data$java==1)),1)
+spss <-round((100*mean(data$spss==1)),1)
+java <-round((100*mean(data$java==1)),1)
+tableau <-round((100*mean(data$tableau==1)),1)
+excel <-round((100*mean(data$excel==1)),1)
+SQL <-round((100*mean(data$SQL==1)),1)
+stata <-round((100*mean(data$stata==1)),1)
+C <-round((100*mean(data$C==1)),1)
+SAS <-round((100*mean(data$SAS==1)),1)
+R <-round((100*mean(data$R==1)),1)
+python <-round((100*mean(data$python==1)),1)
+ml <-round((100*mean(data$ml==1)),1)
+opt <-round((100*mean(data$opt==1)),1)
+bd <-round((100*mean(data$bd==1)),1)
+research <-round((100*mean(data$research==1)),1)
+stats <-round((100*mean(data$stats==1)),1)
+dm <-round((100*mean(data$dm==1)),1)
+risk <-round((100*mean(data$risk==1)),1)
+fs <-round((100*mean(data$fs==1)),1)
+program <-round((100*mean(data$program==1)),1)
+pharma <-round((100*mean(data$pharma==1)),1)
+sd <-round((100*mean(data$sd==1)),1)
+UX <-round((100*mean(data$UX==1)),1)
+
+
+percent<-c(SAS, oracle, ruby, hadoop, NLP, matlab, linux, java, spss, tableau, excel, SQL, stata, C, R, python, ml, opt, bd, research, stats, dm, sd, UX)
+
+label<-c("SAS", "oracle", "ruby", "hadoop", "NLP", "matlab", "linux", "java", "spss", "tableau", "excel", "SQL", "stata", "C", "R", "python", "machine learning", "optimization", "big data", "research", "statistics", "data management", "software development", "UX")
+
+
+skills<-data.frame(percent, label)
+
+
+skills<-skills[order(percent),]
+
+```
+
+```{r fig3, echo=FALSE,message=FALSE,include=TRUE,fig.cap="Percent of data scientist positions in New York City listing the specific  skill, skills are ranked from highest to lowest demand", }
+
+p<-ggplot(data=skills, aes(x=reorder(label, -percent), y=percent)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()+theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+ ggtitle("Figure 3: Analytic and Technical Skills for Data Scientist")+labs(x="Skills", y="Percent of Job Postings")
+p
+
+```
+
+###Job Skills and Education
+
+Table 2 summarizes the top 6 skills for data scientists by education requirements, results from ANOVA tests suggested a statistically significant difference in the proportion of job postings listing the individual skills by education for all 6 skills. In general, job postings that mention higher levels of education, i.e., Masters, or PhD, also are more likely to mention statistics, python, research, machine learning, and R, and less likely to mention SQL.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#summary(aov(data$ml~data$educ_cat3))
+
+#table(data$educ_cat3, data$SQL)
+#table(data$educ_cat3, data$R)
+#table(data$educ_cat3, data$python)
+##table(data$educ_cat3, data$ml)
+#table(data$educ_cat3, data$research)
+#table(data$educ_cat3, data$stats)
+
+
+
+ht2 <- hux(
+        Skills = c("Statistics", "Python", "SQL", "Research", "Machine Learning", "R"),
+        Bachelors = round(100*c(96/175, 86/175, 123/175, 93/175, 39/175, 64/175),1),
+        Masters = round(100*c(156/255, 144/255, 153/255, 122/255, 110/255, 109/255),1),
+        PhD = round(100*c(173/218, 149/218, 92/218, 162/218, 151/218, 122/218),1),
+        PValue = c("<.01", "<.01", "<.01", "<.01", "<.01", "<.01"),
+
+        add_colnames = TRUE
+      )%>%
+
+      set_bold(1, everywhere, TRUE)       %>%
+      set_bottom_border(1, everywhere, 1) %>%
+      set_align(everywhere, 2, 'center')   %>%
+      set_right_padding(10)               %>%
+      set_left_padding(10)                %>%
+      set_width(0.85)                 %>%
+      set_caption('Differnces in Top 6 Skills by Education')
+
+ht2
+
+
+```
+
+
+###Job Skills and Estimated Salary
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+m_stats<-lm(data$salary_average~data$stats+data$educ_cat3)
+m_python<-lm(data$salary_average~data$python+data$educ_cat3)
+m_SQL<-lm(data$salary_average~data$SQL+data$educ_cat3)
+m_research<-lm(data$salary_average~data$research+data$educ_cat3)
+m_ml<-lm(data$salary_average~data$ml+data$educ_cat3)
+m_r<-lm(data$salary_average~data$R+data$educ_cat3)
+m_bd<-lm(data$salary_average~data$bd+data$educ_cat3)
+m_hadoop<-lm(data$salary_average~data$hadoop+data$educ_cat3)
+m_java<-lm(data$salary_average~data$java+data$educ_cat3)
+m_C<-lm(data$salary_average~data$C+data$educ_cat3)
+m_SAS<-lm(data$salary_average~data$SAS+data$educ_cat3)
+m_Opt<-lm(data$salary_average~data$opt+data$educ_cat3)
+m_excel<-lm(data$salary_average~data$excel+data$educ_cat3)
+m_tableau<-lm(data$salary_average~data$tableau+data$educ_cat3)
+m_dm<-lm(data$salary_average~data$dm+data$educ_cat3)
+m_matlab<-lm(data$salary_average~data$matlab+data$educ_cat3)
+m_sd<-lm(data$salary_average~data$sd+data$educ_cat3)
+m_linux<-lm(data$salary_average~data$linux+data$educ_cat3)
+m_spss<-lm(data$salary_average~data$spss+data$educ_cat3)
+m_oracle<-lm(data$salary_average~data$oracle+data$educ_cat3)
+m_nlp<-lm(data$salary_average~data$NLP+data$educ_cat3)
+m_ruby<-lm(data$salary_average~data$ruby+data$educ_cat3)
+m_UX<-lm(data$salary_average~data$UX+data$educ_cat3)
+m_stata<-lm(data$salary_average~data$UX+data$educ_cat3)
+
+
+models<-c( "statistics","python",  "SQL", "research", "machine learning", "R", "big data","hadoop", "java", "C", "SAS", "optimization", "excel", "tableau", "data management", "matlab", "software development", "linux", "spss", "oracle", "NLP", "ruby", "UX", "stata") 
+
+
+betas<-c(round(summary(m_stats)$coefficients[2,1],2), round(summary(m_python)$coefficients[2,1],2), round(summary(m_SQL)$coefficients[2,1],2), round(summary(m_research)$coefficients[2,1],2), round(summary(m_ml)$coefficients[2,1],2), round(summary(m_r)$coefficients[2,1],2), round(summary(m_bd)$coefficients[2,1],2), round(summary(m_hadoop)$coefficients[2,1],2), round(summary(m_java)$coefficients[2,1],2), round(summary(m_C)$coefficients[2,1],2), round(summary(m_SAS)$coefficients[2,1],2), round(summary(m_Opt)$coefficients[2,1],2), round(summary(m_excel)$coefficients[2,1],2), round(summary(m_tableau)$coefficients[2,1],2), round(summary(m_dm)$coefficients[2,1],2), round(summary(m_matlab)$coefficients[2,1],2), round(summary(m_sd)$coefficients[2,1],2), round(summary(m_linux)$coefficients[2,1],2), round(summary(m_spss)$coefficients[2,1],2), round(summary(m_oracle)$coefficients[2,1],2), round(summary(m_nlp)$coefficients[2,1],2), round(summary(m_ruby)$coefficients[2,1],2), round(summary(m_UX)$coefficients[2,1],2), round(summary(m_stata)$coefficients[2,1],2))      
+
+sd<-c(round(summary(m_stats)$coefficients[2,2],2), round(summary(m_python)$coefficients[2,2],2), round(summary(m_SQL)$coefficients[2,2],2), round(summary(m_research)$coefficients[2,2],2), round(summary(m_ml)$coefficients[2,2],2), round(summary(m_r)$coefficients[2,2],2), round(summary(m_bd)$coefficients[2,2],2), round(summary(m_hadoop)$coefficients[2,2],2), round(summary(m_java)$coefficients[2,2],2), round(summary(m_C)$coefficients[2,2],2), round(summary(m_SAS)$coefficients[2,2],2), round(summary(m_Opt)$coefficients[2,2],2), round(summary(m_excel)$coefficients[2,2],2), round(summary(m_tableau)$coefficients[2,2],2), round(summary(m_dm)$coefficients[2,2],2), round(summary(m_matlab)$coefficients[2,2],2), round(summary(m_sd)$coefficients[2,2],2), round(summary(m_linux)$coefficients[2,2],2), round(summary(m_spss)$coefficients[2,2],2), round(summary(m_oracle)$coefficients[2,2],2), round(summary(m_nlp)$coefficients[2,2],2), round(summary(m_ruby)$coefficients[2,2],2), round(summary(m_UX)$coefficients[2,2],2), round(summary(m_stata)$coefficients[2,2],2))        
+
+pval<-c(round(summary(m_stats)$coefficients[2,4],2), round(summary(m_python)$coefficients[2,4],2), round(summary(m_SQL)$coefficients[2,4],2), round(summary(m_research)$coefficients[2,4],2), round(summary(m_ml)$coefficients[2,4],2), round(summary(m_r)$coefficients[2,4],2), round(summary(m_bd)$coefficients[2,4],2), round(summary(m_hadoop)$coefficients[2,4],2), round(summary(m_java)$coefficients[2,4],2), round(summary(m_C)$coefficients[2,4],2), round(summary(m_SAS)$coefficients[2,4],2), round(summary(m_Opt)$coefficients[2,4],2), round(summary(m_excel)$coefficients[2,4],2), round(summary(m_tableau)$coefficients[2,4],2), round(summary(m_dm)$coefficients[2,4],2), round(summary(m_matlab)$coefficients[2,4],2), round(summary(m_sd)$coefficients[2,4],2), round(summary(m_linux)$coefficients[2,4],2), round(summary(m_spss)$coefficients[2,4],2), round(summary(m_oracle)$coefficients[2,4],2), round(summary(m_nlp)$coefficients[2,4],2), round(summary(m_ruby)$coefficients[2,4],2), round(summary(m_UX)$coefficients[2,4],2), round(summary(m_stata)$coefficients[2,4],2))
+
+df<-data.frame(models, betas, sd, pval)
+
+df<-df[order(-df$betas),]
+
+ht3 <- hux(
+        Skills = df$models,
+        "Estimated Salary Increase"  = df$betas,
+        "Standard Error" = df$sd,
+        "p-value" = df$pval,
+
+        add_colnames = TRUE
+      )%>%
+
+      set_bold(1, everywhere, TRUE)       %>%
+      set_bottom_border(1, everywhere, 1) %>%
+      set_align(everywhere, 2, 'center')   %>%
+      set_right_padding(10)               %>%
+      set_left_padding(10)                %>%
+      set_width(0.95)                 %>%
+      set_caption('Results From Linear Regression Models- Estimated Changes in Salary by Skill')
+
+ht3
+
+
+```
+Table 3 shows results from individual linear regression models, looking at the difference in estimated salary for data science positions listing vs. not listing the individual skill, after taking to account (adjusting) the differences in salary by education previously mentioned. The 3 skills associated with the largest increase in estimated salary are machine learning, C, and python, and are associated with a $27,000, $25,900, and $18,400 increase in estimated salary, respectively.
+
+##Conclusion
+
+There is no standard or typical set of requirements for data scientist in New York City, neither for education, nor technical and analytical skills. In general, having more advanced degrees, i.e., masters and PhD, as compared to bachelors degrees, contribute to an increase in estimated salary. The analytical and technical skills desired from data scientist were associated with education, where skills related to statistics were seen more often with higher levels of education. Finally, some skills contributed as much as $27,000 to estimated salary beyond any differences in education. It is important for students, and new and experienced professionals focused in data science, to understand the skills desired from employers, and what sort of payoff one might expect from acquiring these skills.
+
+##Supplemental Code
+
+
+```{r child = 'appendix.Rmd'}
+
+```
+
+##References
+
+
+<br>
